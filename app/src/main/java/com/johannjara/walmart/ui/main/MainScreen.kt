@@ -1,14 +1,18 @@
 package com.johannjara.walmart.ui.main
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -18,16 +22,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
-import com.johannjara.walmart.theme.WalmartTheme
+import com.johannjara.walmart.ui.search.EmptyScreen
+import com.johannjara.walmart.ui.search.ErrorScreen
+import com.johannjara.walmart.ui.search.ProductLazyList
+import com.johannjara.walmart.ui.search.ProductSearchUiState
+import com.johannjara.walmart.ui.search.ProductSearchViewModel
 import com.johannjara.walmart.ui.search.SearchHistoryList
 import com.johannjara.walmart.ui.search.SearchViewModel
 
@@ -35,12 +43,12 @@ import com.johannjara.walmart.ui.search.SearchViewModel
 fun MainScreen(
   onItemClick: (NavKey) -> Unit,
   modifier: Modifier = Modifier,
-  mainViewModel: MainScreenViewModel = hiltViewModel(),
   searchViewModel: SearchViewModel = hiltViewModel(),
+  productSearchViewModel: ProductSearchViewModel = hiltViewModel(),
 ) {
-  val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
   val searchQuery by searchViewModel.searchQuery.collectAsStateWithLifecycle()
   val searchHistoryState by searchViewModel.searchHistoryState.collectAsStateWithLifecycle()
+  val productUiState by productSearchViewModel.uiState.collectAsStateWithLifecycle()
 
   val focusManager = LocalFocusManager.current
   var isFocused by remember { mutableStateOf(false) }
@@ -72,6 +80,7 @@ fun MainScreen(
       keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
       keyboardActions = KeyboardActions(onSearch = {
         searchViewModel.onSearchTriggered()
+        productSearchViewModel.searchProducts(searchQuery)
         focusManager.clearFocus()
       }),
       singleLine = true
@@ -86,43 +95,42 @@ fun MainScreen(
         state = searchHistoryState,
         onItemClick = { query ->
           searchViewModel.onHistoryItemClicked(query)
+          productSearchViewModel.searchProducts(query)
           focusManager.clearFocus()
         }
       )
     } else {
-      when (uiState) {
-        MainScreenUiState.Loading -> {
-          // Blank
+      when (val productState = productUiState) {
+        ProductSearchUiState.Idle -> {
+          // Show nothing or prompt
         }
-        is MainScreenUiState.Success -> {
-          MainScreen(data = (uiState as MainScreenUiState.Success).data)
+        ProductSearchUiState.Loading -> {
+          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+          }
         }
-        is MainScreenUiState.Error -> {
-          Text("Error loading data: ${(uiState as MainScreenUiState.Error).throwable.message}")
+        is ProductSearchUiState.Success -> {
+          ProductLazyList(
+            products = productState.products,
+            isFetchingNextPage = productState.isFetchingNextPage,
+            onLoadMore = { productSearchViewModel.loadNextPage() },
+            modifier = Modifier.fillMaxSize()
+          )
+        }
+        is ProductSearchUiState.Error -> {
+          ErrorScreen(
+            message = productState.message,
+            onRetry = { productSearchViewModel.retry() },
+            modifier = Modifier.fillMaxSize()
+          )
+        }
+        is ProductSearchUiState.Empty -> {
+          EmptyScreen(
+            keyword = productState.keyword,
+            modifier = Modifier.fillMaxSize()
+          )
         }
       }
     }
   }
-}
-
-@Composable
-internal fun MainScreen(data: List<String>, modifier: Modifier = Modifier) {
-  Column(modifier) { data.forEach { Greeting(it) } }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-  Text(text = "Hello $name!", modifier = modifier)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-  WalmartTheme { MainScreen(listOf("Android")) }
-}
-
-@Preview(showBackground = true, widthDp = 340)
-@Composable
-fun MainScreenPortraitPreview() {
-  WalmartTheme { MainScreen(listOf("Android")) }
 }

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
@@ -5,6 +7,14 @@ plugins {
   alias(libs.plugins.ksp)
   alias(libs.plugins.hilt)
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+val rapidApiKey = localProperties.getProperty("RAPIDAPI_KEY") ?: ""
 
 android {
     namespace = "com.johannjara.walmart"
@@ -16,6 +26,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "RAPIDAPI_KEY", "\"$rapidApiKey\"")
     }
 
     buildTypes {
@@ -31,7 +42,7 @@ android {
     buildFeatures {
       compose = true
       aidl = false
-      buildConfig = false
+      buildConfig = true
       shaders = false
     }
 
