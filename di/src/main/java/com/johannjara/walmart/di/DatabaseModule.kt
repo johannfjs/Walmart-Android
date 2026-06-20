@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.johannjara.walmart.data.datasource.local.AppDatabase
 import com.johannjara.walmart.data.datasource.local.DummyDao
+import com.johannjara.walmart.data.datasource.local.SearchHistoryDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,5 +29,10 @@ object DatabaseModule {
     @Provides
     fun provideDummyDao(appDatabase: AppDatabase): DummyDao {
         return appDatabase.dummyDao()
+    }
+
+    @Provides
+    fun provideSearchHistoryDao(appDatabase: AppDatabase): SearchHistoryDao {
+        return appDatabase.searchHistoryDao()
     }
 }
