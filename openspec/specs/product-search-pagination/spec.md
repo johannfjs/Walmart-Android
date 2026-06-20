@@ -1,4 +1,9 @@
-## ADDED Requirements
+# Product Search Pagination Spec
+
+## Purpose
+This specification outlines the requirements for product search pagination, including remote product fetching, internet permission, local caching and eviction, non-blocking pagination logic, and UI state and infinite scroll interaction.
+
+## Requirements
 
 ### Requirement: Remote Product Fetching
 The repository SHALL consume the remote Walmart API keyword search service to request products by keyword and page number using a Retrofit service.
@@ -6,6 +11,15 @@ The repository SHALL consume the remote Walmart API keyword search service to re
 #### Scenario: Successful remote fetch
 - **WHEN** a search is initiated for keyword "sony" at page 1 and the network service returns a success response with a list of products
 - **THEN** the products are transformed to domain models and sent to the cache persistence layer.
+
+---
+
+### Requirement: Internet Permission
+The application Android manifest MUST declare the `android.permission.INTERNET` permission to allow remote network calls.
+
+#### Scenario: Verify internet permission in manifest
+- **WHEN** the application is compiled
+- **THEN** the manifest SHALL contain the `android.permission.INTERNET` permission.
 
 ---
 
