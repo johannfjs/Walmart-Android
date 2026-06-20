@@ -3,7 +3,7 @@ package com.johannjara.walmart.di
 import android.content.Context
 import androidx.room.Room
 import com.johannjara.walmart.data.datasource.local.AppDatabase
-import com.johannjara.walmart.data.datasource.local.DummyDao
+import com.johannjara.walmart.data.datasource.local.ProductCacheDao
 import com.johannjara.walmart.data.datasource.local.SearchHistoryDao
 import dagger.Module
 import dagger.Provides
@@ -27,12 +27,12 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideDummyDao(appDatabase: AppDatabase): DummyDao {
-        return appDatabase.dummyDao()
+    fun provideSearchHistoryDao(appDatabase: AppDatabase): SearchHistoryDao {
+        return appDatabase.searchHistoryDao()
     }
 
     @Provides
-    fun provideSearchHistoryDao(appDatabase: AppDatabase): SearchHistoryDao {
-        return appDatabase.searchHistoryDao()
+    fun provideProductCacheDao(appDatabase: AppDatabase): ProductCacheDao {
+        return appDatabase.productCacheDao()
     }
 }
